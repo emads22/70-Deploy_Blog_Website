@@ -51,7 +51,10 @@ gravatar = Gravatar(app,
 
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+# instead of connecting to sqlite db like above we shld connect to Postgres db from Heroku, using config var file (like .env) name of database
+# variable is 'DATABASE_URL', so we use 'os.getenv()' method as if its a '.env' file:
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
