@@ -1,0 +1,85 @@
+{% extends 'bootstrap/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+<!-- the above two lines are added to be able to add the comment quick_form -->
+
+<!-- add 'block content' to specify which block we are making changes (as per Bootstrap doc) and also add 'endblock' in the end to close it-->
+{% block content %}
+{% include "header.html" %}
+
+  <!-- Page Header -->
+  <header class="masthead" style="background-image: url('{{post.img_url}}')">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="post-heading">
+            <h1>{{post.title}}</h1>
+            <h2 class="subheading">{{post.subtitle}}</h2>
+            <span class="meta">Posted by
+              <!-- 'post.author' is a user object now after creating relationship between tables, so 'post.author.name' to get his name, and .title() for title case -->
+              <a href="#">{{post.author.name.title()}}</a>
+              on {{post.date}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Post Content -->
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            {{ post.body|safe }}
+          <hr>
+
+            <div class="clearfix">
+
+            <!-- only if current_user is the admin (id=1) to see this button -->
+            {% if current_user.id==1: %}
+              <a class="btn btn-primary float-right" href="{{url_for('edit_post', post_id=post.id)}}">Edit Post</a>
+            {% endif %}
+
+            </div>
+
+
+<!--  Comments Area -->
+
+          <!-- load ckeditor where we want to put CKEditor textarea -->
+          {{ ckeditor.load() }}
+          <!-- configure ckeditor and pass the CKEditorField attribute’s name -->
+          {{ ckeditor.config(name='comment') }}
+          <!-- configure the wtf quick_form and make the submit button blue using 'button_map' parameter -->
+          {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+
+          <div class="col-lg-8 col-md-10 mx-auto comment">
+              <ul class="commentList">
+
+                <!-- after relationship we have 'comments' attribute of post object and its a list of comments objects, so we loop into this list to display every single comment (after rendering it from db with safe filter) in addition its author name -->
+                {% for comment in post.comments: %}
+                <li>
+                    <div class="commenterImage">
+                      <!-- we change the comment img source to 'email | gravatar' (email cz its unique) after configuring it in main.py, as per doc -->
+                      <img src="{{ comment.comment_author.email | gravatar }}"/>
+                    </div>
+                    <div class="commentText">
+                      <p>{{ comment.text | safe }}</p>
+                      <span class="date sub-text">{{ comment.comment_author.name }}</span>
+                    </div><!-- only if specific user (author of comment) is logged in to see this button and delete comment with passing the comment id -->
+                    {% if current_user.is_authenticated and current_user.id == comment.author_id: %}
+                    <a href="{{ url_for('delete_comment', comment_id=comment.id) }}">✘</a>
+                    {% endif %}
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+
+
+          </div>
+      </div>
+    </div>
+  </article>
+
+  <hr>
+{% include "footer.html" %}
+{% endblock %}
